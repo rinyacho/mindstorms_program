@@ -9,13 +9,13 @@
 #include "sonic.h"
 #include "ev3api.h"
 #include "app.h"
-// ŠJ”­‚ªI—¹‚µ‚½‚çƒfƒoƒbƒN‚ğÁ‚·A‚»‚êˆÈŠO‚Ìê‡‚Í‚»‚Ì‚Ü‚Üg‚¤ƒCƒ[ƒW
+// ï¿½Jï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½fï¿½oï¿½bï¿½Nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ÈŠOï¿½Ìê‡ï¿½Í‚ï¿½ï¿½Ì‚Ü‚Ügï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½[ï¿½W
 #define DEBUG
-// ‚»‚ê‚¼‚ê‚Ç‚¿‚ç‚©‚ª—LŒø‚É‚È‚é‚Ì‚ª‰º‹L
+// ï¿½ï¿½ï¿½ê‚¼ï¿½ï¿½Ç‚ï¿½ï¿½ç‚©ï¿½ï¿½ï¿½Lï¿½ï¿½ï¿½É‚È‚ï¿½Ì‚ï¿½ï¿½ï¿½ï¿½L
 #ifdef DEBUG
 #define _debug(x) (x)
 #else
-// #define DEBUG‚ªƒRƒƒ“ƒgƒAƒEƒg‚³‚ê‚Ä‚¢‚é‰º‹L
+// #define DEBUGï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½ï¿½ï¿½gï¿½Aï¿½Eï¿½gï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½é‰ºï¿½L
 #define _debug(x)
 #endif
 
@@ -29,7 +29,7 @@
 const int gyro_sensor = EV3_PORT_2, left_motor = EV3_PORT_A, right_motor = EV3_PORT_D;
 
 /**
- * Constants for the self-balance control algorithm.•Ï‚¦‚È‚¢•û‚ª‚æ‚¢‚æ
+ * Constants for the self-balance control algorithm.ï¿½Ï‚ï¿½ï¿½È‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ‚¢ï¿½ï¿½
  */
 const float KSTEER=-0.25;
 const float EMAOFFSET = 0.0005f, KGYROANGLE = 7.5f, KGYROSPEED = 1.15f, KPOS = 0.07f, KSPEED = 0.1f, KDRIVE = -0.02f;
@@ -50,17 +50,17 @@ const float INIT_INTERVAL_TIME = 0.014;
 //const float INIT_INTERVAL_TIME = 0.014;
 
 /**
- * Global variables used by the self-balance control algorithm.–{ƒtƒ@ƒCƒ‹‚Ì’†‚Å‚Íg—p‰Â”\
- ‚»‚Ì‘¼‚Ìƒtƒ@ƒCƒ‹‚©‚ç‚ÍQÆ•s‰Â‚Ì’è‹`‚ª‰º‹L
+ * Global variables used by the self-balance control algorithm.ï¿½{ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½Ì’ï¿½ï¿½Å‚Ígï¿½pï¿½Â”\
+ ï¿½ï¿½ï¿½Ì‘ï¿½ï¿½Ìƒtï¿½@ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÍQï¿½Æ•sï¿½Â‚Ì’ï¿½`ï¿½ï¿½ï¿½ï¿½ï¿½L
  */
 static int motor_diff, motor_diff_target;
 static int loop_count, motor_control_drive, motor_control_steer;
 static float gyro_offset, gyro_speed, gyro_angle, interval_time;
 static float motor_pos, motor_speed;
-//ƒXƒ^ƒeƒBƒbƒN
+//ï¿½Xï¿½^ï¿½eï¿½Bï¿½bï¿½N
 /**
  * Calculate the initial gyro offset for calibration.
- ƒ[ƒƒAƒWƒƒƒXƒgAÅ‰‚Ì‚Ü‚Á‚·‚®‚ÌˆÊ’u‚ğæ“¾iƒLƒƒƒŠƒuƒŒ[ƒVƒ‡ƒ“jAÅ‰‚ÉŒX‚¯‚é‚Æ‘S‚­—§‚½‚È‚¢
+ ï¿½[ï¿½ï¿½ï¿½Aï¿½Wï¿½ï¿½ï¿½Xï¿½gï¿½Aï¿½Åï¿½ï¿½Ì‚Ü‚ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÌˆÊ’uï¿½ï¿½ï¿½æ“¾ï¿½iï¿½Lï¿½ï¿½ï¿½ï¿½ï¿½uï¿½ï¿½ï¿½[ï¿½Vï¿½ï¿½ï¿½ï¿½ï¿½jï¿½Aï¿½Åï¿½ï¿½ÉŒXï¿½ï¿½ï¿½ï¿½Æ‘Sï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½
  */
 static ER calibrate_gyro_sensor() {
     int gMn = 1000, gMx = -100, gSum = 0;
@@ -83,7 +83,7 @@ static ER calibrate_gyro_sensor() {
 
 /**
  * Calculate the average interval time of the main loop for the self-balance control algorithm.
- * Units: seconds get_tim‚ÍƒAƒCƒgƒƒ“‚ÌŠÖ”AŠÔ‚ğ“Ç‚İo‚·A‚»‚ê‚ğ•Ï”‚É“ü‚ê‚éBƒXƒ^[ƒgƒ^ƒCƒ€
+ * Units: seconds get_timï¿½ÍƒAï¿½Cï¿½gï¿½ï¿½ï¿½ï¿½ï¿½ÌŠÖï¿½ï¿½Aï¿½ï¿½ï¿½Ô‚ï¿½Ç‚İoï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Ïï¿½ï¿½É“ï¿½ï¿½ï¿½ï¿½Bï¿½Xï¿½^ï¿½[ï¿½gï¿½^ï¿½Cï¿½ï¿½
  */
 static void update_interval_time() {
     static SYSTIM start_time;
@@ -91,13 +91,13 @@ static void update_interval_time() {
     if(loop_count++ == 0) { // Interval time for the first time (use 6ms as a magic number)
         //interval_time = 0.006;
         interval_time = INIT_INTERVAL_TIME;
-        ER ercd = get_tim(&start_time); // “Ç‚İo‚µ‚½‚Æ‚«‚Ìƒ~ƒŠsecƒJƒEƒ“ƒ^‚Ì’l‚ğ‚Æ‚éAƒJ[ƒlƒ‹ŠJn‚©‚ç‚Ì
+        ER ercd = get_tim(&start_time); // ï¿½Ç‚İoï¿½ï¿½ï¿½ï¿½ï¿½Æ‚ï¿½ï¿½Ìƒ~ï¿½ï¿½secï¿½Jï¿½Eï¿½ï¿½ï¿½^ï¿½Ì’lï¿½ï¿½ï¿½Æ‚ï¿½Aï¿½Jï¿½[ï¿½lï¿½ï¿½ï¿½Jï¿½nï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         assert(ercd == E_OK);
     } else {
         SYSTIM now;
         ER ercd = get_tim(&now);
         assert(ercd == E_OK);
-        interval_time = ((float)(now - start_time)) / loop_count / 1000; // ·•ª‚ÅŒvZAƒCƒ“ƒ^[ƒoƒ‹ƒ^ƒCƒ€‚ÉÅI
+        interval_time = ((float)(now - start_time)) / loop_count / 1000; // ï¿½ï¿½ï¿½ï¿½ï¿½ÅŒvï¿½Zï¿½Aï¿½Cï¿½ï¿½ï¿½^ï¿½[ï¿½oï¿½ï¿½ï¿½^ï¿½Cï¿½ï¿½ï¿½ÉÅI
     }
 }
 
@@ -105,7 +105,7 @@ static void update_interval_time() {
  * Update data of the gyro sensor.
  * gyro_offset: the offset for calibration.
  * gyro_speed: the speed of the gyro sensor after calibration.
- * gyro_angle: the angle of the robot.ƒWƒƒƒCƒƒf[ƒ^‚ğ“Ç‚İo‚·
+ * gyro_angle: the angle of the robot.ï¿½Wï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½fï¿½[ï¿½^ï¿½ï¿½Ç‚İoï¿½ï¿½
  */
 static void update_gyro_data() {
     int gyro = ev3_gyro_sensor_get_rate(gyro_sensor);
@@ -115,7 +115,7 @@ static void update_gyro_data() {
 }
 
 /**
- * Update data of the motors“|‚ê‚©‚¯‚½‚çƒ‚[ƒ^[‚ğ“®‚©‚·
+ * Update data of the motorsï¿½|ï¿½ê‚©ï¿½ï¿½ï¿½ï¿½ï¿½çƒ‚ï¿½[ï¿½^ï¿½[ï¿½ğ“®‚ï¿½ï¿½ï¿½
  */
 static void update_motor_data() {
     static int32_t prev_motor_cnt_sum, motor_cnt_deltas[4];
@@ -140,7 +140,7 @@ static void update_motor_data() {
 
 /**
  * Control the power to keep balance.
- * Return false when the robot has fallen.ˆÀ’è‚Ì‚½‚ß‚ÌŠÖ”
+ * Return false when the robot has fallen.ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½ß‚ÌŠÖï¿½
  */
 static bool_t keep_balance() {
     static SYSTIM ok_time;
@@ -191,7 +191,7 @@ static bool_t keep_balance() {
 
     return true;
 }
-// ˆÀ’è‚Ì‚½‚ß‚Ìƒ^ƒXƒN
+// ï¿½ï¿½ï¿½ï¿½Ì‚ï¿½ï¿½ß‚Ìƒ^ï¿½Xï¿½N
 void balance_task(intptr_t unused) {
     ER ercd;
 
@@ -236,7 +236,7 @@ void balance_task(intptr_t unused) {
         // Update data of the motors
         update_motor_data();
 
-        // Keep balance ƒoƒ‰ƒ“ƒX‚ªæ‚ê‚È‚¢‚Æ‚«‚É“®ì‚ğ’â~‚·‚é‰º‹L
+        // Keep balance ï¿½oï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½Æ‚ï¿½ï¿½É“ï¿½ï¿½ï¿½ï¿½ï¿½~ï¿½ï¿½ï¿½é‰ºï¿½L
         if(!keep_balance()) {
             ev3_motor_stop(left_motor, false);
             ev3_motor_stop(right_motor, false);
@@ -246,11 +246,11 @@ void balance_task(intptr_t unused) {
         }
 
         tslp_tsk(WAIT_TIME_MS); 
-        // ƒfƒBƒŒƒCƒ^ƒXƒN‚Æˆêi–ß‚è’lˆÈŠOjAŠÔ‚Ìw’è‚ª–³‚¢ê‡‚ÍŒÄ‚Ño‚µ‚ ‚é‚Ü‚Å’â~A
+        // ï¿½fï¿½Bï¿½ï¿½ï¿½Cï¿½^ï¿½Xï¿½Nï¿½Æˆêï¿½iï¿½ß‚ï¿½lï¿½ÈŠOï¿½jï¿½Aï¿½ï¿½ï¿½Ô‚Ìwï¿½è‚ªï¿½ï¿½ï¿½ï¿½ï¿½ê‡ï¿½ÍŒÄ‚Ñoï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚Å’ï¿½~ï¿½A
     }
 }
 
-static void button_clicked_handler(intptr_t button) {	// ƒ{ƒ^ƒ“‚ğƒIƒX‚Æ•¶š‚ğo‚·
+static void button_clicked_handler(intptr_t button) {	// ï¿½{ï¿½^ï¿½ï¿½ï¿½ï¿½ï¿½Iï¿½Xï¿½Æ•ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½oï¿½ï¿½
     switch(button) {
     case BACK_BUTTON:
         syslog(LOG_NOTICE, "Back button clicked.");
@@ -264,17 +264,17 @@ static FILE *bt = NULL;
 
 void idle_task(intptr_t unused) {
     while(1) {
-    	fprintf(bt, "Press 'h' for usage instructions.\n"); // ƒtƒ@ƒCƒ‹iBluetoothj‚ÉƒvƒŠƒ“ƒg
+    	fprintf(bt, "Press 'h' for usage instructions.\n"); // ï¿½tï¿½@ï¿½Cï¿½ï¿½ï¿½iBluetoothï¿½jï¿½Éƒvï¿½ï¿½ï¿½ï¿½ï¿½g
     	tslp_tsk(1000);
     }
 }
-// ŠÌS
+// ï¿½ÌS
 void main_task(intptr_t unused) {
     // Draw information
-    lcdfont_t font = EV3_FONT_MEDIUM;	// ‰t»‚Ìİ’è
-    ev3_lcd_set_font(font);	// ƒtƒHƒ“ƒg‚ÌƒTƒCƒY‚ğæ“¾
+    lcdfont_t font = EV3_FONT_MEDIUM;	// ï¿½tï¿½ï¿½ï¿½Ìİ’ï¿½
+    ev3_lcd_set_font(font);	// ï¿½tï¿½Hï¿½ï¿½ï¿½gï¿½ÌƒTï¿½Cï¿½Yï¿½ï¿½ï¿½æ“¾
     int32_t fontw, fonth;
-    ev3_font_get_size(font, &fontw, &fonth);	// ƒtƒHƒ“ƒg‚ÌƒTƒCƒY‚ğæ“¾A•‚Æ‚‚³A‰üsãY—í‚É
+    ev3_font_get_size(font, &fontw, &fonth);	// ï¿½tï¿½Hï¿½ï¿½ï¿½gï¿½ÌƒTï¿½Cï¿½Yï¿½ï¿½ï¿½æ“¾ï¿½Aï¿½ï¿½ï¿½Æï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½sï¿½Yï¿½ï¿½ï¿½
     char lcdstr[100];
     ev3_lcd_draw_string("App: Gyroboy", 0, 0);
     sprintf(lcdstr, "Port%c:Gyro sensor", '1' + gyro_sensor);
@@ -284,29 +284,29 @@ void main_task(intptr_t unused) {
     sprintf(lcdstr, "Port%c:Right motor", 'A' + right_motor);
     ev3_lcd_draw_string(lcdstr, 0, fonth * 3);
 
-    // Register button handlers		Š„‚İ‚İ‚½‚¢‚È‚à‚ÌAƒAƒbƒvAƒ_ƒEƒ“A
+    // Register button handlers		ï¿½ï¿½ï¿½ï¿½ï¿½İ‚İ‚ï¿½ï¿½ï¿½ï¿½È‚ï¿½ï¿½ÌAï¿½Aï¿½bï¿½vï¿½Aï¿½_ï¿½Eï¿½ï¿½ï¿½A
     ev3_button_set_on_clicked(BACK_BUTTON, button_clicked_handler, BACK_BUTTON);
     ev3_button_set_on_clicked(ENTER_BUTTON, button_clicked_handler, ENTER_BUTTON);
     ev3_button_set_on_clicked(LEFT_BUTTON, button_clicked_handler, LEFT_BUTTON);
 
-    // Configure sensors	‚¨‚È‚¶‚İ
+    // Configure sensors	ï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½
     ev3_sensor_config(gyro_sensor, GYRO_SENSOR);
 
-    // Configure motors		‚¨‚È‚¶‚İ
+    // Configure motors		ï¿½ï¿½ï¿½È‚ï¿½ï¿½ï¿½
     ev3_motor_config(left_motor, LARGE_MOTOR);
     ev3_motor_config(right_motor, LARGE_MOTOR);
 
-    // Start task for self-balancing	ƒRƒ“ƒtƒBƒO‚Å‚ÍƒIƒt‚É‚È‚Á‚Ä‚¢‚é‚Ì‚ÅA‘¼‚Ìƒ^ƒXƒN‚ğƒAƒNƒeƒBƒx[ƒgicfgjQÆ
+    // Start task for self-balancing	ï¿½Rï¿½ï¿½ï¿½tï¿½Bï¿½Oï¿½Å‚ÍƒIï¿½tï¿½É‚È‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Ì‚ÅAï¿½ï¿½ï¿½Ìƒ^ï¿½Xï¿½Nï¿½ï¿½ï¿½Aï¿½Nï¿½eï¿½Bï¿½xï¿½[ï¿½gï¿½icfgï¿½jï¿½Qï¿½ï¿½
     act_tsk(BALANCE_TASK);
 
-    // Open Bluetooth file		Bluetooth‚É‚Â‚È‚ª‚Á‚Ä‚È‚¯‚ê‚ÎƒGƒ‰[
+    // Open Bluetooth file		Bluetoothï¿½É‚Â‚È‚ï¿½ï¿½ï¿½ï¿½Ä‚È‚ï¿½ï¿½ï¿½ÎƒGï¿½ï¿½ï¿½[
     bt = ev3_serial_open_file(EV3_SERIAL_BT);
     assert(bt != NULL);
 
-    // Start task for printing message while idle	ƒRƒ“ƒtƒBƒO‚Å‚ÍƒIƒt‚É‚È‚Á‚Ä‚¢‚é‚Ì‚ÅA‘¼‚Ìƒ^ƒXƒN‚ğƒAƒNƒeƒBƒx[ƒgicfgjQÆ
+    // Start task for printing message while idle	ï¿½Rï¿½ï¿½ï¿½tï¿½Bï¿½Oï¿½Å‚ÍƒIï¿½tï¿½É‚È‚ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Ì‚ÅAï¿½ï¿½ï¿½Ìƒ^ï¿½Xï¿½Nï¿½ï¿½ï¿½Aï¿½Nï¿½eï¿½Bï¿½xï¿½[ï¿½gï¿½icfgï¿½jï¿½Qï¿½ï¿½
 	act_tsk(IDLE_TASK);
 	
-	// ‚±‚±‚Ü‚Å€”õAˆÈ~ƒ‹[ƒv
+	// ï¿½ï¿½ï¿½ï¿½ï¿½Ü‚Åï¿½ï¿½ï¿½ï¿½Aï¿½È~ï¿½ï¿½ï¿½[ï¿½v
     while(1) {
     	int soni;
 		rcv_dtq( DTQ_SONIC, &soni );
@@ -320,65 +320,10 @@ void main_task(intptr_t unused) {
 		}
 		dly_tsk(10);
 		rsm_tsk(IDLE_TASK);
-/*        while (!ev3_bluetooth_is_connected()) tslp_tsk(100);		// •¶š‚ª—ˆ‚é‚Ü‚Å‘Ò‚Â
-    	uint8_t c = fgetc(bt);		// ƒeƒ‰ƒ^[ƒ€‚©‚ç‚Ì•¶š‚ğæ‚è‚Ş
-    	sus_tsk(IDLE_TASK);		// ƒTƒXƒyƒ“ƒhƒ^ƒXƒN‚ÅAƒAƒCƒhƒ‹‚ğˆê’â~‚·‚éAÀsó‘Ô‚©‚çÀs‰Â”\ó‘Ô‚É‘Î‚µƒTƒXƒyƒ“ƒh‚µ‚ë‚Æ–½—ß‚·‚é‚ÆAÀs‰Â”\ó‘Ô‚©‚çƒTƒXƒyƒ“ƒh‚·‚é
-    	switch(c) {
-    	case 'w':
-    		if(motor_control_drive < 0)
-    			motor_control_drive = 0;
-    		else
-    			motor_control_drive += 10;	// ‘OiAƒOƒ[ƒoƒ‹•Ï”A0‚Í’â~Aƒvƒ‰ƒX‚Í‘OAƒ}ƒCƒiƒX‚ÍŒã‚ëA‹——£ƒZƒ“ƒT[‚Å‘Î‰·‚µ‘Ö‚¦AŒ»óBluetooth
-    		fprintf(bt, "motor_control_drive: %d\n", motor_control_drive);
-    		break;
-
-    	case 's':
-    		if(motor_control_drive > 0)
-    			motor_control_drive = 0;
-    		else
-    			motor_control_drive -= 10;
-    		fprintf(bt, "motor_control_drive: %d\n", motor_control_drive);
-    		break;
-
-    	case 'a':
-    		if(motor_control_steer < 0)
-    			motor_control_steer = 0;
-    		else
-    			motor_control_steer += 10;		// ƒ}ƒCƒiƒX‚Í‹tAƒvƒ‰ƒX‚Í‰E‚©¶‚É‹È‚ª‚éA¶‰EƒRƒ“ƒgƒ[ƒ‹A30‚­‚ç‚¢‚ª—Ç‚¢‚©‚à
-    		fprintf(bt, "motor_control_steer: %d\n", motor_control_steer);
-    		break;
-
-    	case 'd':
-    		if(motor_control_steer > 0)
-    			motor_control_steer = 0;
-    		else
-    			motor_control_steer -= 10;
-    		fprintf(bt, "motor_control_steer: %d\n", motor_control_steer);
-    		break;
-
-    	case 'h':
-    		fprintf(bt, "==========================\n");
-    		fprintf(bt, "Usage:\n");
-    		fprintf(bt, "Press 'w' to speed up\n");
-    		fprintf(bt, "Press 's' to speed down\n");
-    		fprintf(bt, "Press 'a' to turn left\n");
-    		fprintf(bt, "Press 'd' to turn right\n");
-    		fprintf(bt, "Press 'i' for idle task\n");
-    		fprintf(bt, "Press 'h' for this message\n");
-    		fprintf(bt, "==========================\n");
-    		break;
-
-    	case 'i':
-    		fprintf(bt, "Idle task started.\n");
-    		rsm_tsk(IDLE_TASK);		// ƒŠƒWƒNƒ€ƒ^ƒXƒNA—§‚¿ã‚°AƒTƒXƒyƒ“ƒh‚ÆƒZƒbƒg
-    		break;
-    	default:
-    		fprintf(bt, "Unknown key '%c' pressed.\n", c);
-    	} */
     }
 }
 
-// ‰Û‘è‚Å‚ÍƒOƒ[ƒoƒ‹•Ï”‚Ì’l‚ğ•ÏX‚µ‚Ä‘Î‰‚µ‚Ä‚¢‚­
-// ˜r‚ğU‚Á‚ÄŒ³‹C‚æ‚­•à‚­‚æ‚¤‚ÉAm_moter_tsk‚Åi‚ß‚éAƒ\[ƒXƒR[ƒh‚ÍƒVƒ“ƒvƒ‹Aƒ‰ƒCƒ“ƒgƒŒ[ƒX‚ÌƒCƒ[ƒW
-// ‘Oi‚µ‚Ä‚¢‚éŠÔ‚ÌŠÔ‚É‚æ‚Á‚Ä“®‚«‚ğØ‚è‘Ö‚¦‚é‚±‚Æ
-// ƒoƒ‰ƒ“ƒXƒ^ƒXƒN‚ÍƒWƒƒƒCƒƒRƒ“ƒgƒ[ƒ‹AƒƒCƒ“ƒ^ƒXƒN‚ÍBluetoothAƒAƒCƒhƒ‹ƒ^ƒX‚àBluetoothA‹C‚É‚·‚é•K—v‚Í‚È‚¢
+// ï¿½Û‘ï¿½Å‚ÍƒOï¿½ï¿½ï¿½[ï¿½oï¿½ï¿½ï¿½Ïï¿½ï¿½Ì’lï¿½ï¿½ÏXï¿½ï¿½ï¿½Ä‘Î‰ï¿½ï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½
+// ï¿½rï¿½ï¿½Uï¿½ï¿½ï¿½ÄŒï¿½ï¿½Cï¿½æ‚­ï¿½ï¿½ï¿½ï¿½ï¿½æ‚¤ï¿½ÉAm_moter_tskï¿½Åiï¿½ß‚ï¿½Aï¿½\ï¿½[ï¿½Xï¿½Rï¿½[ï¿½hï¿½ÍƒVï¿½ï¿½ï¿½vï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½Xï¿½ÌƒCï¿½ï¿½ï¿½[ï¿½W
+// ï¿½Oï¿½iï¿½ï¿½ï¿½Ä‚ï¿½ï¿½ï¿½Ô‚Ìï¿½ï¿½Ô‚É‚ï¿½ï¿½ï¿½Ä“ï¿½ï¿½ï¿½ï¿½ï¿½Ø‚ï¿½Ö‚ï¿½ï¿½é‚±ï¿½ï¿½
+// ï¿½oï¿½ï¿½ï¿½ï¿½ï¿½Xï¿½^ï¿½Xï¿½Nï¿½ÍƒWï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Rï¿½ï¿½ï¿½gï¿½ï¿½ï¿½[ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½^ï¿½Xï¿½Nï¿½ï¿½Bluetoothï¿½Aï¿½Aï¿½Cï¿½hï¿½ï¿½ï¿½^ï¿½Xï¿½ï¿½Bluetoothï¿½Aï¿½Cï¿½É‚ï¿½ï¿½ï¿½Kï¿½vï¿½Í‚È‚ï¿½
